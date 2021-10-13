@@ -1,0 +1,5 @@
+SETTING,VALUE
+send_notify,1
+download_thresh,2
+minutes_avg,3
+poll_minutes,0.5
