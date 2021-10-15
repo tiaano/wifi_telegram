@@ -16,6 +16,8 @@ chat_id <- "822736555" # you can retrieve it from bot$getUpdates() after sending
 
 confpath <- "wc_conf.txt"
 
+work_state <- "none"
+
 setConf <- function(settingStr,parvalue){
   
   settingSearch  <- settingStr
@@ -53,20 +55,25 @@ start <- function(bot, update){
 showCmds <- function(bot,update){
   print("Command received: /cmds")
   bot$sendMessage(chat_id = update$message$chat_id,
-                  text = sprintf("Commands\nSet threshold: /setT\n/Set Notification: setN"))
+                  text = sprintf("Commands\nSet threshold: /sett\nSet Notification: /setn"))
 }
 
 setThresh <- function(bot, update, args){
   print("Command received: /sett",args)
   
-  if (length(args > 0L)){
-    new_thresh <- args
-    
-    setConf(settingStr = "download_thresh",parvalue = as.numeric(new_thresh))
-    
-    bot$sendMessage(chat_id = update$message$chat_id,
-                    text = paste("Download threshold set to ",new_thresh))
-  }
+  work_state <<- "threshold"
+  
+  bot$sendMessage(chat_id = update$message$chat_id,
+                                    text = paste("What should the new threshold be?"))
+  
+  # if (length(args > 0L)){
+  #   new_thresh <- args
+  #   
+  #   setConf(settingStr = "download_thresh",parvalue = as.numeric(new_thresh))
+  #   
+  #   bot$sendMessage(chat_id = update$message$chat_id,
+  #                   text = paste("Download threshold set to ",new_thresh))
+  # }
   
 
 }
@@ -82,7 +89,30 @@ RKM <- ReplyKeyboardMarkup(
 )
 
 echo <- function(bot, update){
-  bot$sendMessage(chat_id = update$message$chat_id, text = update$message$text, reply_markup = RKM)
+  txt <- update$message$text
+  # bot$sendMessage(chat_id = update$message$chat_id, text = update$message$text, reply_markup = RKM)
+  
+  if ( tolower(txt) == "hi") {
+    bot$sendMessage(chat_id = update$message$chat_id, text = paste("Bot is active"))
+  }
+  
+  
+  if ( tolower(txt) == "state") {
+    bot$sendMessage(chat_id = update$message$chat_id, text = paste("Current state is:",work_state))
+  }
+  
+  
+  
+  if (work_state == "threshold" & !is.na(suppressWarnings(as.numeric(txt))) ){
+    new_thresh <- txt
+    setConf(settingStr = "download_thresh",parvalue = as.numeric(new_thresh))
+    
+    bot$sendMessage(chat_id = update$message$chat_id,
+                                      text = paste("Download threshold set to ",new_thresh))
+    
+    work_state <<- "none"
+  }
+  
 }
 
 
