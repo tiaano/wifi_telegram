@@ -1,6 +1,7 @@
 # install.packages("telegram.bot")
 library(telegram.bot)
 library(dplyr)
+library(readr)
 
 telegramBotTok <- "714765088:AAGMUv8e0wXZUK094u4eXYX6QPttHOg1Bj8"
 
@@ -43,19 +44,23 @@ setConf <- function(settingStr,parvalue){
 # Controllers ----
 
 start <- function(bot, update){
+  
+  print("Command received: /start")
   bot$sendMessage(chat_id = update$message$chat_id,
                   text = sprintf("Hello %s!", update$message$from$first_name))
 }
 
 showCmds <- function(bot,update){
+  print("Command received: /cmds")
   bot$sendMessage(chat_id = update$message$chat_id,
                   text = sprintf("Commands\nSet threshold: /setT\n/Set Notification: setN"))
 }
 
-setThresh <- function(bot, update, arg){
+setThresh <- function(bot, update, args){
+  print("Command received: /sett",args)
   
-  if (length(arg > 0L)){
-    new_thresh <- arg
+  if (length(args > 0L)){
+    new_thresh <- args
     
     setConf(settingStr = "download_thresh",parvalue = as.numeric(new_thresh))
     
@@ -66,6 +71,22 @@ setThresh <- function(bot, update, arg){
 
 }
 
+RKM <- ReplyKeyboardMarkup(
+  keyboard = list(
+    list(KeyboardButton("Yes, they certainly are!")),
+    list(KeyboardButton("I'm not quite sure")),
+    list(KeyboardButton("No..."))
+  ),
+  resize_keyboard = FALSE,
+  one_time_keyboard = TRUE
+)
+
+echo <- function(bot, update){
+  bot$sendMessage(chat_id = update$message$chat_id, text = update$message$text, reply_markup = RKM)
+}
+
+
+
 updater <- Updater(token = telegramBotTok)
 
 start_handler <- CommandHandler("start", start)
@@ -75,5 +96,6 @@ setThresh_handler <- CommandHandler("sett", setThresh, pass_args = TRUE)
 updater <- updater + start_handler 
 updater <- updater +  cmdList_handler
 updater <- updater + setThresh_handler
+updater <- updater + MessageHandler(echo, MessageFilters$text)
 
 updater$start_polling()
