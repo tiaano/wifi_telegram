@@ -3,7 +3,8 @@ library(telegram.bot)
 library(dplyr)
 library(readr)
 
-telegramBotTok <- "714765088:AAGMUv8e0wXZUK094u4eXYX6QPttHOg1Bj8"
+telegramBotTok <- bot_token("OttoNotifyBot")
+
 
 bot <- Bot(token = telegramBotTok)
 
@@ -143,3 +144,5 @@ updater <- updater + setNotify_handler
 updater <- updater + MessageHandler(echo, MessageFilters$text)
 
 updater$start_polling()
+
+

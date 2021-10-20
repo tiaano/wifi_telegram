@@ -4,3 +4,5 @@
 .Ruserdata
 wc_confold.txt
 nohup.out
+.Renviron
+WifiLog.csv
