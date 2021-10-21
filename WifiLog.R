@@ -54,7 +54,7 @@ sendMsg <- function(par_txt) {
 
 getRate <- function(par_tbl,x) {
   
-  print(max(par_tbl$Download)/(1024^2))
+  # print(max(par_tbl$Download)/(1024^2))
   
   outputtbl <- par_tbl %>% tail(x) %>% select(1:3) %>%
     mutate(prev_down = lag(Download),
@@ -77,7 +77,7 @@ checkHighRate <- function(par_vec, max_rate, max_msg_time) {
   
   curr_avg <- mean(par_vec,na.rm = T)
   
-  print(paste0('Avg download rate for last 3 minutes: ',curr_avg,'mb/s'))
+  # print(paste0('Avg download rate for last 3 minutes: ',curr_avg,'mb/s'))
 
   tesettime <- max_msg_time
   
@@ -126,7 +126,7 @@ repeat{
                               max_rate = getConf(settingStr = "download_thresh"),
                               max_msg_time = max(msg_sent$msg_time))
     
-    print(max(msg_sent$msg_time))
+    # print(max(msg_sent$msg_time))
 
     
     write_csv(temp_tbl,textlogpath,append = T,col_names = F)

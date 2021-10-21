@@ -3,7 +3,8 @@ library(telegram.bot)
 library(dplyr)
 library(readr)
 
-telegramBotTok <- "714765088:AAGMUv8e0wXZUK094u4eXYX6QPttHOg1Bj8"
+telegramBotTok <- bot_token("OttoNotifyBot")
+
 
 bot <- Bot(token = telegramBotTok)
 
@@ -15,6 +16,8 @@ chat_id <- "822736555" # you can retrieve it from bot$getUpdates() after sending
 #  Misc Functions ----
 
 confpath <- "wc_conf.txt"
+
+work_state <- "none"
 
 setConf <- function(settingStr,parvalue){
   
@@ -53,36 +56,76 @@ start <- function(bot, update){
 showCmds <- function(bot,update){
   print("Command received: /cmds")
   bot$sendMessage(chat_id = update$message$chat_id,
-                  text = sprintf("Commands\nSet threshold: /setT\n/Set Notification: setN"))
+                  text = sprintf("Commands\nSet threshold: /sett\nSet Notification: /setn"))
 }
 
 setThresh <- function(bot, update, args){
   print("Command received: /sett",args)
   
-  if (length(args > 0L)){
-    new_thresh <- args
-    
-    setConf(settingStr = "download_thresh",parvalue = as.numeric(new_thresh))
-    
-    bot$sendMessage(chat_id = update$message$chat_id,
-                    text = paste("Download threshold set to ",new_thresh))
-  }
+  work_state <<- "threshold"
+  
+  bot$sendMessage(chat_id = update$message$chat_id,
+                                    text = paste("What should the new threshold be?"))
   
 
 }
 
-RKM <- ReplyKeyboardMarkup(
+setNotify <- function(bot, update){
+  print("Command received: /setn")
+  
+  work_state <<- "notify"
+  
+  bot$sendMessage(chat_id = update$message$chat_id,
+                  text = paste("Set notify flag 1 or 0"), reply_markup = RKM_notify)
+  
+  
+}
+
+RKM_notify <- ReplyKeyboardMarkup(
   keyboard = list(
-    list(KeyboardButton("Yes, they certainly are!")),
-    list(KeyboardButton("I'm not quite sure")),
-    list(KeyboardButton("No..."))
+    list(KeyboardButton("1")),
+    list(KeyboardButton("0"))
+  
   ),
   resize_keyboard = FALSE,
   one_time_keyboard = TRUE
 )
 
 echo <- function(bot, update){
-  bot$sendMessage(chat_id = update$message$chat_id, text = update$message$text, reply_markup = RKM)
+  txt <- update$message$text
+  # bot$sendMessage(chat_id = update$message$chat_id, text = update$message$text, reply_markup = RKM)
+  
+  if ( tolower(txt) == "hi") {
+    bot$sendMessage(chat_id = update$message$chat_id, text = paste("Bot is active"))
+  }
+  
+  
+  if ( tolower(txt) == "state") {
+    bot$sendMessage(chat_id = update$message$chat_id, text = paste("Current state is:",work_state))
+  }
+  
+  
+  
+  if (work_state == "threshold" & !is.na(suppressWarnings(as.numeric(txt))) ){
+    new_thresh <- txt
+    setConf(settingStr = "download_thresh",parvalue = as.numeric(new_thresh))
+    
+    bot$sendMessage(chat_id = update$message$chat_id,
+                                      text = paste("Download threshold set to ",new_thresh))
+    
+    work_state <<- "none"
+  }
+  
+  if (work_state == "notify" & !is.na(suppressWarnings(as.numeric(txt))) ){
+    new_thresh <- txt
+    setConf(settingStr = "send_notify",parvalue = as.numeric(new_thresh))
+    
+    bot$sendMessage(chat_id = update$message$chat_id,
+                    text = paste("Notify flag set to ",new_thresh))
+    
+    work_state <<- "none"
+  }
+  
 }
 
 
@@ -92,10 +135,14 @@ updater <- Updater(token = telegramBotTok)
 start_handler <- CommandHandler("start", start)
 cmdList_handler <- CommandHandler("cmds", showCmds)
 setThresh_handler <- CommandHandler("sett", setThresh, pass_args = TRUE)
+setNotify_handler <- CommandHandler("setn", setNotify)
 
 updater <- updater + start_handler 
 updater <- updater +  cmdList_handler
 updater <- updater + setThresh_handler
+updater <- updater + setNotify_handler
 updater <- updater + MessageHandler(echo, MessageFilters$text)
 
 updater$start_polling()
+
+
