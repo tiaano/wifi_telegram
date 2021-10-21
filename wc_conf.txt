@@ -1,5 +1,5 @@
 SETTING,VALUE
-send_notify,0
-download_thresh,10
+send_notify,1
+download_thresh,1
 minutes_avg,3
 poll_minutes,0.5
